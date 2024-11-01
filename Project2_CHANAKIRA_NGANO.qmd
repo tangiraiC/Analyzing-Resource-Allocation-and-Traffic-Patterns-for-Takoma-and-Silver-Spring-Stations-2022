@@ -1,0 +1,115 @@
+---
+title: "ITEC-610 - Project 4: Hypothesis Testing with Simple OLS Linear Regression"
+format: 
+    html:
+        embed-resources: true
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+**Setting the environment** and initialising the dataset
+
+```{r}
+setwd("~/Documents/itec610/PROJECT 2")
+library(dplyr)
+wmata <- read.csv("WMATA_DailyRidership_Bus_Rail_2021.08_to_2024.06.csv")
+```
+
+**Subetting the data where :**
+
+1.  station name = takoma, silver spring
+
+2.  year = 2022
+
+```{r}
+#subsetting
+wmata_sub <-  wmata |> 
+  filter(Station.Name %in% c("Takoma","Silver spring") & 
+           Year == 2022)
+#recode the entries or boarding into traffic levels
+wmata_sub$traffic_level  <- 
+  ifelse(wmata_sub$Entries.Or.Boardings <= 1150,"light",
+         ifelse(wmata_sub$Entries.Or.Boardings > 1150 & wmata_sub$Entries.Or.Boardings <= 2272,"moderate",
+                ifelse(wmata_sub$Entries.Or.Boardings >= 2272,"high",NA
+                       )))
+wmata_selected <- select(wmata_sub,"Servicetype","traffic_level")
+
+
+```
+
+**remove missing values**
+
+```{r}
+cleaned_wmata <- wmata_selected |>
+  filter(!is.na(traffic_level),!is.na(Servicetype))
+```
+
+Calculating the chi square test
+
+```{r}
+#save table as an object
+tab_stories <- table( "service type"= clean_wmata$Servicetype, 'traffic level'=clean_wmata$traffic_level)
+addmargins(tab_stories)
+round(addmargins(prop.table(tab_stories,1)),3)*100
+
+```
+
+chi square test
+
+```{r}
+#run chisq
+chisq.test(tab_stories)
+
+```
+
+prop
+
+```{r}
+round(addmargins(prop.table(tab_stories,1)),3)*100
+```
+
+**Univariate analysis**
+
+```{r}
+
+# Create a frequency table for traffic leve
+freq_table <- clean_wmata %>%
+  count(traffic_level)
+# Print the frequency table
+print(freq_table)
+
+# Create a frequency table for service type
+freq_table_dplyr1 <- clean_wmata %>%
+  count(Servicetype)
+# Print the frequency table
+print(freq_table_dplyr1)
+
+
+```
+
+**Bivariate table for the variables service type and traffic level**
+
+```{r}
+contigency_table2 <-  table(clean_wmata$traffic_level,clean_wmata$Servicetype);contigency_table2
+round(prop.table(contigency_table2,margin = 2)*100,1)
+
+```
+
+**use summary tools to do univariate**
+
+```{r}
+library(summarytools)
+ctable(as.factor(h$stories,h$recroom,prop="r",chisq=TRUE))
+
+```
